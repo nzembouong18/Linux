@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# =============================================================================
+# ./lab — lanceur des labos et démos
+#   ./lab list                 liste des modules
+#   ./lab setup  <NN>          prépare le labo
+#   ./lab check  <NN>          vérifie votre travail
+#   ./lab solve  <NN>          applique la solution de référence
+#   ./lab reset  <NN>          supprime le labo
+#   ./lab demo   <NN>          lance la démonstration du formateur
+#   ./lab doc    <NN>          affiche le chemin du cours et du labo
+# =============================================================================
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_module() {
+  local id; printf -v id '%02d' "$((10#${1}))" 2>/dev/null || { echo "Identifiant invalide: $1" >&2; exit 2; }
+  local m; m=$(find "$ROOT/modules" -maxdepth 1 -type d -name "${id}-*" | head -1)
+  [[ -n "$m" ]] || { echo "Module $id introuvable (./lab list)" >&2; exit 2; }
+  echo "$m"
+}
+
+cmd=${1:-list}
+case $cmd in
+  list)
+    printf '%-4s %-34s %s\n' "N°" "Module" "Niveau"
+    for d in "$ROOT"/modules/*/; do
+      n=$(basename "$d"); lvl=$(sed -n 's/^> \*\*Niveau\*\* : \([^|]*\).*/\1/p' "$d/README.md" | head -1 | sed 's/ *$//')
+      printf '%-4s %-34s %s\n' "${n%%-*}" "${n#*-}" "$lvl"
+    done ;;
+  setup|check|solve|reset)
+    [[ $# -ge 2 ]] || { echo "Usage: ./lab $cmd <NN>" >&2; exit 2; }
+    exec bash "$(find_module "$2")/lab.sh" "$cmd" ;;
+  demo)
+    [[ $# -ge 2 ]] || { echo "Usage: ./lab demo <NN>" >&2; exit 2; }
+    exec bash "$(find_module "$2")/demo.sh" ;;
+  doc)
+    m=$(find_module "${2:?Usage: ./lab doc <NN>}"); echo "Cours : ${m#"$ROOT"/}/README.md"; echo "Labo  : ${m#"$ROOT"/}/LAB.md" ;;
+  *) sed -n '2,12p' "${BASH_SOURCE[0]}"; exit 2 ;;
+esac

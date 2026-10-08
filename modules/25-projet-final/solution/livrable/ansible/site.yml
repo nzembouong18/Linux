@@ -1,0 +1,74 @@
+---
+- name: Déploiement de l'application Tickets (maquette locale)
+  hosts: tickets
+  gather_facts: false
+  vars:
+    target_root: "{{ playbook_dir }}/../../cible"
+    app_port: 8000
+    livrable: "{{ playbook_dir }}/.."
+  tasks:
+    - name: Arborescence cible
+      ansible.builtin.file:
+        path: "{{ target_root }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - etc/systemd/system
+        - etc/nginx/conf.d
+        - etc/ssh/sshd_config.d
+        - etc/sysctl.d
+        - etc/tickets
+        - usr/local/bin
+        - var/run
+
+    - name: Unité systemd
+      ansible.builtin.copy:
+        src: "{{ livrable }}/systemd/tickets.service"
+        dest: "{{ target_root }}/etc/systemd/system/tickets.service"
+        mode: "0644"
+      notify: recharger systemd
+
+    - name: Configuration nginx
+      ansible.builtin.copy:
+        src: "{{ livrable }}/nginx/tickets.conf"
+        dest: "{{ target_root }}/etc/nginx/conf.d/tickets.conf"
+        mode: "0644"
+      notify: recharger nginx
+
+    - name: Scripts d'exploitation
+      ansible.builtin.copy:
+        src: "{{ livrable }}/scripts/{{ item.src }}"
+        dest: "{{ target_root }}/usr/local/bin/{{ item.dest }}"
+        mode: "0755"
+      loop:
+        - { src: backup.sh, dest: tickets-backup }
+        - { src: healthcheck.sh, dest: tickets-healthcheck }
+
+    - name: Sécurité (sshd, pare-feu, sysctl)
+      ansible.builtin.copy:
+        src: "{{ livrable }}/security/{{ item.src }}"
+        dest: "{{ target_root }}/{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: sshd_99-tickets.conf, dest: etc/ssh/sshd_config.d/99-tickets.conf, mode: "0644" }
+        - { src: nftables.conf, dest: etc/nftables.conf, mode: "0600" }
+        - { src: sysctl.conf, dest: etc/sysctl.d/99-tickets.conf, mode: "0644" }
+
+    - name: Fichier d'environnement (secret issu du Vault)
+      ansible.builtin.template:
+        src: tickets.env.j2
+        dest: "{{ target_root }}/etc/tickets/tickets.env"
+        mode: "0640"
+      no_log: true
+
+  handlers:
+    - name: recharger systemd
+      ansible.builtin.copy:
+        content: "daemon-reload\n"
+        dest: "{{ target_root }}/var/run/systemd-reload.flag"
+        mode: "0644"
+    - name: recharger nginx
+      ansible.builtin.copy:
+        content: "reload\n"
+        dest: "{{ target_root }}/var/run/nginx-reload.flag"
+        mode: "0644"

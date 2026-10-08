@@ -1,0 +1,28 @@
+# Laboratoire Linux jetable : Ubuntu 24.04 avec systemd comme PID 1.
+#   docker compose up -d --build
+#   docker compose exec -u student lab bash        # puis : ./lab list
+#   docker compose down -v                         # tout remettre à zéro
+#
+# ⚠️ « privileged » est nécessaire pour les labos stockage (loop, LVM), réseau (namespaces), conteneurs et systemd.
+#    N'exécutez ce conteneur que sur une machine de formation/jetable, jamais sur un serveur de production.
+services:
+  lab:
+    build: .
+    image: linux-training:latest
+    container_name: linux-lab
+    hostname: lab
+    privileged: true
+    cgroup: host
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ./:/opt/linux-training
+      - lab-home:/home/student
+    tty: true
+    stdin_open: true
+
+volumes:
+  lab-home:

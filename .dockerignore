@@ -1,0 +1,6 @@
+.git
+labs/
+*.cast
+*.pcap
+.vagrant/
+**/__pycache__

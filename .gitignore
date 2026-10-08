@@ -1,0 +1,10 @@
+# Labos générés localement
+labs/
+*.pcap
+*.cast
+.vagrant/
+*.retry
+__pycache__/
+.vault_pass
+*.swp
+.DS_Store

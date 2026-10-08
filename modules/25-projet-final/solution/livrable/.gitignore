@@ -1,0 +1,10 @@
+# Secrets et fichiers locaux — ne JAMAIS versionner
+*.env
+!*.env.j2
+.vault_pass
+*.pem
+*.key
+cible/
+*.pcap
+*.retry
+__pycache__/

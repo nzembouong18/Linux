@@ -1,0 +1,42 @@
+name: CI — validation de la formation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (shellcheck + liens Markdown)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: shellcheck
+        run: make lint
+      - name: Liens relatifs Markdown
+        run: scripts/check-links.sh
+
+  labs:
+    name: Labos et démos (setup → check KO → solve → check OK → démo → reset)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer les dépendances
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            tree acl jq rsync strace sysstat lsof psmisc procps iproute2 iputils-ping dnsutils \
+            netcat-openbsd curl tcpdump nftables lvm2 parted gdisk xfsprogs e2fsprogs dosfstools \
+            mdadm openssh-server openssh-client logrotate bzip2 xz-utils zstd gnupg openssl \
+            nginx-light apache2-utils haproxy keepalived busybox-static prometheus prometheus-node-exporter \
+            python3-yaml python3-jmespath ansible-core shellcheck systemd-container
+          # Les services installés ne doivent pas occuper les ports ni gêner les labos
+          sudo systemctl disable --now nginx haproxy keepalived prometheus prometheus-node-exporter ssh 2>/dev/null || true
+      - name: Valider tous les modules (root, comme dans le conteneur de labo)
+        run: sudo -E env "PATH=$PATH" scripts/validate.sh

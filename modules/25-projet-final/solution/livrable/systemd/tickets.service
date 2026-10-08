@@ -1,0 +1,30 @@
+[Unit]
+Description=Application Tickets (API et interface web)
+Documentation=file:///opt/tickets/README.md
+After=network.target
+
+[Service]
+Type=simple
+User=tickets
+Group=tickets
+WorkingDirectory=/opt/tickets
+EnvironmentFile=-/etc/tickets/tickets.env
+ExecStart=/usr/bin/python3 /opt/tickets/app.py
+Restart=on-failure
+RestartSec=3
+
+# Durcissement
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=256M
+TasksMax=100
+
+[Install]
+WantedBy=multi-user.target
