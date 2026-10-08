@@ -19,7 +19,7 @@ jobs:
       - name: shellcheck
         run: make lint
       - name: Liens relatifs Markdown
-        run: scripts/check-links.sh
+        run: bash scripts/check-links.sh
 
   labs:
     name: Labos et démos (setup → check KO → solve → check OK → démo → reset)
@@ -39,4 +39,4 @@ jobs:
           # Les services installés ne doivent pas occuper les ports ni gêner les labos
           sudo systemctl disable --now nginx haproxy keepalived prometheus prometheus-node-exporter ssh 2>/dev/null || true
       - name: Valider tous les modules (root, comme dans le conteneur de labo)
-        run: sudo -E env "PATH=$PATH" scripts/validate.sh
+        run: sudo -E env "PATH=$PATH" bash scripts/validate.sh

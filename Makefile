@@ -5,19 +5,19 @@ help: ## Affiche cette aide
 	@awk 'BEGIN{FS=":.*## "} /^[a-zA-Z_-]+:.*## /{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 list: ## Liste les modules de la formation
-	@./lab list
+	@bash ./lab list
 
 validate: ## Teste TOUS les labos et démos (setup → check KO → solve → check OK → démo → reset)
-	@scripts/validate.sh
+	@bash scripts/validate.sh
 
 validate-%: ## Teste un module : make validate-05
-	@scripts/validate.sh $*
+	@bash scripts/validate.sh $*
 
 lint: ## shellcheck sur tous les scripts (locale UTF-8)
 	@LC_ALL=C.UTF-8 shellcheck -x -S warning lab scripts/*.sh modules/*/*.sh modules/25-projet-final/solution/livrable/scripts/*.sh
 
 links: ## Vérifie les liens relatifs des fichiers Markdown
-	@scripts/check-links.sh
+	@bash scripts/check-links.sh
 
 ci: lint links validate ## Enchaîne lint, liens et validation (comme la CI)
 
