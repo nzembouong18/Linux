@@ -73,7 +73,10 @@ lab_check() {
     assert "D4 memory.max = 64 Mo" bash -c "[[ '$mem' == 67108864 || '$mem' == 64M ]]"
     assert_eq "D4 pids.max = 16" 16 "$(cat "$CGROOT/lab20/pids.max" 2>/dev/null)"
     assert_eq "D4 cpu.max = 50 %" "50000 100000" "$(cat "$CGROOT/lab20/cpu.max" 2>/dev/null)"
-    if [[ "$CGROOT" == /sys/fs/cgroup ]]; then assert "D4 le processus lancé est bien dans le cgroup lab20" bash -c "as_root ./limites.sh cat /proc/self/cgroup 2>/dev/null | grep -q lab20" ; fi
+    if [[ "$CGROOT" == /sys/fs/cgroup ]]; then
+      local cgself; cgself=$(as_root ./limites.sh cat /proc/self/cgroup 2>/dev/null)
+      assert "D4 le processus lancé est bien dans le cgroup lab20" grep -q lab20 <<<"$cgself"
+    fi
   else
     skip "D4 cgroups v2 (contrôleurs cpu/memory/pids indisponibles sur cet hôte)"
   fi

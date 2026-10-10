@@ -251,6 +251,7 @@ lab_solve() {
   . ./ports.txt
   rm -rf livrable; cp -r "$MODDIR/solution/livrable" livrable
   sed -i "s/@APP_PORT@/$APP_PORT/g; s/@WEB_PORT@/$WEB_PORT/g" livrable/nginx/tickets.conf
+  mkdir -p livrable/ansible/group_vars/all
   echo 'vault_secret_key: "k3y-Tickets-2024-prod"' > livrable/ansible/group_vars/all/vault.yml
   ansible-vault encrypt livrable/ansible/group_vars/all/vault.yml --vault-password-file .vault_pass >/dev/null 2>&1
 }
