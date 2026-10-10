@@ -2,7 +2,7 @@
 
 ## Aide et repérage
 ```bash
-man cmd · cmd --help · apropos mot · whatis cmd · type cmd · which cmd
+man commande · commande --help · apropos mot · whatis commande · type commande · which commande
 whoami · id · hostname · uname -a · cat /etc/os-release · uptime · date
 echo $?                          # code retour (0 = succès)
 ```
@@ -34,8 +34,8 @@ nano f · vim f      # vim : i insérer · Esc · :w · :q · :wq · :q! · dd �
 
 ## Redirections et filtres
 ```bash
-cmd > f  cmd >> f  cmd < f  cmd 2> err  cmd > f 2>&1  cmd &> f  cmd > /dev/null 2>&1
-cmd1 | cmd2        cmd | tee f        $(cmd)     <(cmd)
+commande > f  commande >> f  commande < f  commande 2> err  commande > f 2>&1  commande &> f  commande > /dev/null 2>&1
+commande1 | commande2        commande | tee f        $(commande)     <(commande)
 grep -inrE 'motif' .   (-i casse · -n lignes · -r récursif · -E regex · -v inverse · -c compte · -o seul)
 sort -n -r -u -k2 -t:    uniq -c    cut -d: -f1,3    tr 'a-z' 'A-Z'    paste    column -t
 sort | uniq -c | sort -rn | head            # classement par fréquence

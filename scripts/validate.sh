@@ -22,7 +22,7 @@ fi
 
 ok=0; ko=0; skip=0
 STEP_TIMEOUT="${STEP_TIMEOUT:-120}"   # secondes max par étape (setup/check/solve/demo)
-run() { # run <module> <étape> <attendu: ok|ko> cmd...
+run() { # run <module> <étape> <attendu: ok|ko> commande...
   local m=$1 step=$2 want=$3; shift 3
   local log rc t0=$SECONDS; log=$(mktemp "${LAB_ROOT}/step.XXXXXX")
   echo "  ▶ $m $step"

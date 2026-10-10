@@ -36,19 +36,19 @@ La séparation stdout / stderr est essentielle : on peut sauvegarder les résult
 
 | Syntaxe | Effet |
 |---------|-------|
-| `cmd > f` | stdout → `f` (**écrase**) |
-| `cmd >> f` | stdout → `f` (**ajoute**) |
-| `cmd < f` | stdin ← `f` |
-| `cmd 2> f` | stderr → `f` |
-| `cmd 2>> f` | stderr ajouté à `f` |
-| `cmd > f 2>&1` | stdout **et** stderr → `f` (l'ordre compte !) |
-| `cmd &> f` | idem (bash) |
-| `cmd 2>&1 \| autre` | stderr rejoint stdout pour passer dans le pipe |
-| `cmd > /dev/null` | jette la sortie normale |
-| `cmd 2> /dev/null` | jette les erreurs |
-| `cmd > /dev/null 2>&1` | silence total |
-| `cmd <<< "texte"` | *here-string* : texte comme stdin |
-| `cmd << FIN … FIN` | *here-document* : bloc multi-lignes comme stdin |
+| `commande > f` | stdout → `f` (**écrase**) |
+| `commande >> f` | stdout → `f` (**ajoute**) |
+| `commande < f` | stdin ← `f` |
+| `commande 2> f` | stderr → `f` |
+| `commande 2>> f` | stderr ajouté à `f` |
+| `commande > f 2>&1` | stdout **et** stderr → `f` (l'ordre compte !) |
+| `commande &> f` | idem (bash) |
+| `commande 2>&1 \| autre` | stderr rejoint stdout pour passer dans le pipe |
+| `commande > /dev/null` | jette la sortie normale |
+| `commande 2> /dev/null` | jette les erreurs |
+| `commande > /dev/null 2>&1` | silence total |
+| `commande <<< "texte"` | *here-string* : texte comme stdin |
+| `commande << FIN … FIN` | *here-document* : bloc multi-lignes comme stdin |
 
 ```bash
 ls /etc /inexistant > sortie.txt 2> erreurs.txt     # sépare les deux flux
@@ -60,7 +60,7 @@ ls /etc /inexistant 2>&1 > tout.txt                 # ✘ PIÈGE : stderr va enc
 
 Effets de bord à connaître :
 
-- `cmd > f` **crée/tronque `f` avant** d'exécuter `cmd` : `sort f > f` vide `f` ! Utilisez `sort -o f f` ou un fichier temporaire (`sponge` du paquet *moreutils*).
+- `commande > f` **crée/tronque `f` avant** d'exécuter `commande` : `sort f > f` vide `f` ! Utilisez `sort -o f f` ou un fichier temporaire (`sponge` du paquet *moreutils*).
 - `set -o noclobber` interdit d'écraser par `>` (forcer : `>|`).
 - `/dev/null` : trou noir ; `/dev/zero` : octets nuls ; `/dev/urandom` : octets aléatoires.
 
@@ -161,9 +161,9 @@ column -t -s: /etc/passwd | head # mise en forme en colonnes
 ```bash
 wc -l fichier ; ls | wc -l
 tee fichier                      # copie stdin vers stdout ET vers fichier
-cmd | tee sortie.log | grep ERROR    # on garde tout, on affiche le filtré
-cmd | sudo tee /etc/fichier >/dev/null    # écrire un fichier root depuis un pipe
-cmd | tee -a journal.log         # mode ajout
+commande | tee sortie.log | grep ERROR    # on garde tout, on affiche le filtré
+commande | sudo tee /etc/fichier >/dev/null    # écrire un fichier root depuis un pipe
+commande | tee -a journal.log         # mode ajout
 ```
 
 ### `xargs` — transformer l'entrée en arguments
@@ -221,7 +221,7 @@ grep "Failed password" /var/log/auth.log | grep -o 'from [0-9.]*' | sort | uniq 
 | `2>&1 > f` mauvais ordre | `> f 2>&1` |
 | `ps aux \| grep x` trouve aussi grep | `pgrep x` ou `grep '[x]'` |
 | `rm $(cat liste)` avec espaces | `xargs -d '\n' rm < liste` |
-| `sudo cmd > /etc/f` (la redirection n'est pas sudo) | `cmd \| sudo tee /etc/f` |
+| `sudo commande > /etc/f` (la redirection n'est pas sudo) | `commande \| sudo tee /etc/f` |
 
 ## 8. Résumé
 
@@ -243,7 +243,7 @@ grep "Failed password" /var/log/auth.log | grep -o 'from [0-9.]*' | sort | uniq 
 
 <details><summary>Réponses</summary>
 
-1. `cmd > ok.txt 2> ko.txt`
+1. `commande > ok.txt 2> ko.txt`
 2. Le shell tronque `data.txt` avant que `sort` ne le lise. Utiliser `sort -o data.txt data.txt`.
 3. `awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -5`
 4. `>` écrase ; `>>` ajoute à la fin.

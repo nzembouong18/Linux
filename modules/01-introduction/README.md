@@ -165,12 +165,12 @@ Un administrateur expérimenté ne connaît pas toutes les options : il sait **o
 
 | Commande | Rôle | Exemple |
 |----------|------|---------|
-| `man cmd` | Manuel complet (navigation : `/` recherche, `n` suivant, `q` quitter) | `man ls` |
-| `cmd --help` | Résumé rapide des options | `ls --help` |
+| `man commande` | Manuel complet (navigation : `/` recherche, `n` suivant, `q` quitter) | `man ls` |
+| `commande --help` | Résumé rapide des options | `ls --help` |
 | `man -k mot` / `apropos mot` | Cherche une commande **par mot-clé** | `apropos "copy files"` |
-| `whatis cmd` | Description en une ligne | `whatis grep` |
-| `type cmd` / `which cmd` | D'où vient la commande (alias ? binaire ? interne ?) | `type cd` |
-| `info cmd` | Documentation GNU détaillée | `info coreutils` |
+| `whatis commande` | Description en une ligne | `whatis grep` |
+| `type commande` / `which commande` | D'où vient la commande (alias ? binaire ? interne ?) | `type cd` |
+| `info commande` | Documentation GNU détaillée | `info coreutils` |
 | `/usr/share/doc/<paquet>/` | Exemples et README du paquet | |
 
 Les sections du manuel : **1** commandes utilisateur · **5** formats de fichiers de configuration · **8** commandes d'administration. Exemple : `man 5 passwd` (le fichier) ≠ `man 1 passwd` (la commande).

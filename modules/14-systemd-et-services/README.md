@@ -267,7 +267,7 @@ MAILTO=admin@example.org
 30 2 * * * root /usr/local/bin/sauvegarde.sh >> /var/log/sauvegarde.log 2>&1
 ```
 
-Pièges de cron : environnement **minimal** (PATH réduit, pas de `~/.bashrc`) → chemins absolus ; `%` à échapper (`\%`) ; sortie envoyée par mail si non redirigée ; pas de rattrapage si la machine était éteinte (→ `anacron` ou timers `Persistent=true`) ; tâches qui se chevauchent (→ `flock -n /var/lock/x.lock cmd`). `at` exécute une commande **une seule fois** (`echo cmd | at 18:00`, `atq`).
+Pièges de cron : environnement **minimal** (PATH réduit, pas de `~/.bashrc`) → chemins absolus ; `%` à échapper (`\%`) ; sortie envoyée par mail si non redirigée ; pas de rattrapage si la machine était éteinte (→ `anacron` ou timers `Persistent=true`) ; tâches qui se chevauchent (→ `flock -n /var/lock/x.lock commande`). `at` exécute une commande **une seule fois** (`echo commande | at 18:00`, `atq`).
 
 ## 7. Timers systemd (alternative moderne à cron)
 

@@ -4,8 +4,8 @@
 ```bash
 ps aux · ps -ef --forest · pgrep -a nom · top · htop · pstree -p
 kill PID (TERM) · kill -9 PID · kill -HUP PID · pkill -f motif · killall nom
-cmd & · jobs · fg %1 · bg %1 · nohup cmd & · tmux new -s x (Ctrl+b d · tmux attach -t x)
-nice -n 10 cmd · renice -n 5 -p PID · ls -l /proc/PID/fd · lsof -p PID
+commande & · jobs · fg %1 · bg %1 · nohup commande & · tmux new -s x (Ctrl+b d · tmux attach -t x)
+nice -n 10 commande · renice -n 5 -p PID · ls -l /proc/PID/fd · lsof -p PID
 ```
 Signaux : `1 HUP` recharger · `2 INT` Ctrl+C · `9 KILL` brutal · `15 TERM` arrêt propre · `19 STOP` · `18 CONT`.
 
@@ -51,7 +51,7 @@ CIDR : `/24`=254 hôtes · `/25`=126 · `/26`=62 · `/27`=30 · `/28`=14 · `/30
 
 ## SSH et transferts
 ```bash
-ssh-keygen -t ed25519 -C "moi@pc" · ssh-copy-id user@h · ssh -p 2222 user@h 'cmd' · ssh -J bastion user@h
+ssh-keygen -t ed25519 -C "moi@pc" · ssh-copy-id user@h · ssh -p 2222 user@h 'commande' · ssh -J bastion user@h
 scp f user@h:/tmp/ · rsync -avz --progress src/ user@h:/dest/ · rsync -avn --delete src/ dest/   # -n = simulation
 ssh -N -L 5433:127.0.0.1:5432 user@h · ssh -N -R 9000:127.0.0.1:3000 user@h · ssh -N -D 1080 user@h
 chmod 700 ~/.ssh · chmod 600 ~/.ssh/authorized_keys ~/.ssh/id_ed25519 · sudo sshd -t
@@ -71,7 +71,7 @@ sudo fsck -f /dev/sdb1 (démonté) · sudo e2fsck -fn img · sudo mdadm --detail
 systemctl status|start|stop|restart|reload|enable --now|disable|mask s · systemctl --failed · systemctl list-timers
 sudo systemctl daemon-reload · sudo systemctl edit s · systemctl cat s · systemd-analyze verify f · systemd-analyze blame
 journalctl -u s -f · journalctl -b -p err · journalctl --since "1 hour ago" · journalctl -k · journalctl --vacuum-size=500M
-crontab -e : m h dom mon dow cmd   (*/15 * * * *   30 2 * * *   0 8 * * 1-5)   · systemd-analyze calendar 'Mon..Fri 08:00'
+crontab -e : m h dom mon dow commande   (*/15 * * * *   30 2 * * *   0 8 * * 1-5)   · systemd-analyze calendar 'Mon..Fri 08:00'
 ```
 
 ## Archives et sauvegardes
