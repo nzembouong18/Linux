@@ -14,7 +14,7 @@ demo_run "systemd-analyze calendar '*:0/15' --iterations=3 | grep -E 'Normalized
 demo_run "systemd-analyze calendar '*-*-01 00:00' | grep Normalized"
 
 demo_title "Écrire une unité et la valider AVANT de l'installer"
-demo_run "mkdir -p bin && printf '#!/bin/sh\\necho API ok\\nsleep 3600\\n' > bin/api.sh && chmod +x bin/api.sh"
+demo_run "mkdir -p bin && printf '#!/bin/sh\\necho API ok\\nsleep 3600\\n' > bin/api.sh && chmod +x bin/api.sh && chmod 755 ."
 demo_run "cat > demo-api.service <<EOF
 [Unit]
 Description=API de démonstration
@@ -44,7 +44,7 @@ if [[ -d /run/systemd/system && $EUID -eq 0 ]]; then
   demo_title "LIVE — Installer, démarrer, tuer, observer le redémarrage"
   demo_run "cp demo-api.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now demo-api && sleep 1"
   demo_run "systemctl is-active demo-api; systemctl show demo-api -p MainPID,Restart,NRestarts"
-  demo_run "kill -9 \$(systemctl show -p MainPID --value demo-api); sleep 3; systemctl show demo-api -p NRestarts,ActiveState"
+  demo_run "systemctl kill -s KILL demo-api; sleep 3; systemctl show demo-api -p NRestarts,ActiveState"
   demo_run "journalctl -u demo-api --no-pager -n 6 -o short | cut -c1-110"
   demo_run "systemd-analyze security demo-api.service --no-pager | tail -2"
   demo_run "systemctl disable --now demo-api; rm -f /etc/systemd/system/demo-api.service; systemctl daemon-reload; systemctl list-units 'demo-*' --no-legend | wc -l"

@@ -21,12 +21,23 @@ if [[ ${#mods[@]} -eq 0 ]]; then
 fi
 
 ok=0; ko=0; skip=0
-run() { # run <module> <étape> <attendu: ok|ko> cmd...
+STEP_TIMEOUT="${STEP_TIMEOUT:-120}"   # secondes max par étape (setup/check/solve/demo)
+run() { # run <module> <étape> <attendu: ok|ko> commande...
   local m=$1 step=$2 want=$3; shift 3
-  local out rc; out=$("$@" 2>&1); rc=$?
-  if [[ $rc -eq 77 ]]; then echo "SKIP  $m $step (prérequis absent)"; return 77; fi
-  if { [[ $want == ok && $rc -eq 0 ]] || [[ $want == ko && $rc -ne 0 ]]; }; then return 0; fi
-  echo "FAIL  $m $step (rc=$rc, attendu=$want)"; echo "$out" | tail -15 | sed 's/^/        /'; return 1
+  local log rc t0=$SECONDS; log=$(mktemp "${LAB_ROOT}/step.XXXXXX")
+  echo "  ▶ $m $step"
+  # Sortie dans un fichier (pas de $(...) : un démon héritant du pipe bloquerait), stdin fermé,
+  # timeout dur pour qu'un labo bloqué soit identifié au lieu de geler toute la CI.
+  timeout -k 5 "$STEP_TIMEOUT" "$@" </dev/null >"$log" 2>&1; rc=$?
+  local dt=$((SECONDS - t0))
+  if [[ $rc -eq 77 ]]; then echo "SKIP  $m $step (prérequis absent)"; rm -f "$log"; return 77; fi
+  if [[ $rc -eq 124 || $rc -eq 137 ]]; then
+    echo "FAIL  $m $step : TIMEOUT après ${STEP_TIMEOUT}s (commande: $*)"; tail -30 "$log" | sed 's/^/        /'; rm -f "$log"; return 1
+  fi
+  if { [[ $want == ok && $rc -eq 0 ]] || [[ $want == ko && $rc -ne 0 ]]; }; then
+    echo "    ✔ $m $step (rc=$rc, ${dt}s)"; rm -f "$log"; return 0
+  fi
+  echo "FAIL  $m $step (rc=$rc, attendu=$want, ${dt}s)"; tail -30 "$log" | sed 's/^/        /'; rm -f "$log"; return 1
 }
 
 for m in "${mods[@]}"; do
@@ -40,7 +51,7 @@ for m in "${mods[@]}"; do
       run "$m" "check-avant-solution" ko bash "$dir/lab.sh" check || failed=1
       run "$m" solve ok bash "$dir/lab.sh" solve || failed=1
       run "$m" "check-apres-solution" ok bash "$dir/lab.sh" check || failed=1
-      bash "$dir/lab.sh" reset >/dev/null 2>&1
+      timeout -k 5 "$STEP_TIMEOUT" bash "$dir/lab.sh" reset </dev/null >/dev/null 2>&1
     fi
   fi
   if [[ -f "$dir/demo.sh" ]]; then run "$m" demo ok bash "$dir/demo.sh"; r=$?; [[ $r -eq 0 || $r -eq 77 ]] || failed=1; fi

@@ -13,7 +13,7 @@ nftables minimal : `table inet f { chain input { type filter hook input priority
 
 ## Réseau avancé
 ```bash
-sudo ip netns add ns1 · sudo ip netns exec ns1 cmd · sudo ip -n ns1 addr
+sudo ip netns add ns1 · sudo ip netns exec ns1 commande · sudo ip -n ns1 addr
 sudo ip link add va type veth peer name vb · sudo ip link set va netns ns1
 sudo ip link add br0 type bridge · ip link set eth1 master br0 · bridge link
 sudo sysctl -w net.ipv4.ip_forward=1 · nft add rule ip nat post oifname eth0 masquerade
@@ -25,7 +25,7 @@ ip rule add from 10.1.0.50 table 200 · wg show · iperf3 -c srv · conntrack -L
 ```bash
 uptime · vmstat 1 5 · mpstat -P ALL 1 3 · pidstat 1 3 · iostat -xz 1 3 · free -m · sar -n DEV 1 3
 dmesg -T | tail · journalctl -k | grep -i oom · ps aux --sort=-%mem | head
-ls /proc/PID/fd | wc -l · lsof -p PID · lsof +L1 · strace -c -p PID · strace -f -tt -T -o t.txt cmd · perf top
+ls /proc/PID/fd | wc -l · lsof -p PID · lsof +L1 · strace -c -p PID · strace -f -tt -T -o t.txt commande · perf top
 ```
 Méthode **USE** (Utilisation, Saturation, Erreurs) par ressource ; un seul changement à la fois ; mesurer avant/après.
 

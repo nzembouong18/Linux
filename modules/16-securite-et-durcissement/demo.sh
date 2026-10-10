@@ -15,7 +15,7 @@ demo_run "grep -rhE 'NOPASSWD' /etc/sudoers /etc/sudoers.d 2>/dev/null; echo '--
 
 demo_title "3. Fichiers dangereux"
 demo_run "find /usr/bin /usr/sbin /bin -xdev -perm -4000 -type f 2>/dev/null | head -8"
-demo_run "find /etc /usr -xdev -type f -perm -0002 2>/dev/null | head -3; echo '--world-writable sous /etc,/usr--'"
+demo_run "timeout 20 find /etc /usr/bin /usr/sbin -xdev -type f -perm -0002 2>/dev/null | head -3; echo '--world-writable sous /etc,/usr/bin,/usr/sbin--'"
 demo_run "ls -ld /tmp /var/tmp /dev/shm"
 
 demo_title "4. Reproduire un défaut puis le corriger (umask, chmod)"

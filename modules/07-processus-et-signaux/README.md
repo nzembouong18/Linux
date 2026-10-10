@@ -161,11 +161,11 @@ Un job d'arrière-plan reçoit `SIGHUP` quand le terminal se ferme. Solutions :
 
 | Outil | Usage |
 |-------|-------|
-| `nohup cmd > out.log 2>&1 &` | ignore SIGHUP, sortie dans `out.log` |
+| `nohup commande > out.log 2>&1 &` | ignore SIGHUP, sortie dans `out.log` |
 | `disown -h %1` | détache un job déjà lancé |
-| `setsid cmd &` | nouvelle session, indépendante du terminal |
+| `setsid commande &` | nouvelle session, indépendante du terminal |
 | **`tmux`** / `screen` | **sessions persistantes** : recommandé sur un serveur distant |
-| `systemd-run --user --scope cmd` ou un service systemd | pour du durable (module 14) |
+| `systemd-run --user --scope commande` ou un service systemd | pour du durable (module 14) |
 
 ### tmux en 1 minute
 

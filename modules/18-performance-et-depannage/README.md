@@ -158,7 +158,7 @@ cat /proc/PID/wchan; echo
 strace -f -tt -T -o trace.txt ./programme            # -f suit les enfants, -tt horodatage, -T durée de chaque appel
 sudo strace -p PID                                   # attacher à un processus en cours (Ctrl+C pour sortir)
 sudo strace -c -p PID                                # synthèse : temps par appel système (arrêter avec Ctrl+C)
-strace -e trace=openat,read -s 200 cmd               # filtrer / afficher plus de caractères
+strace -e trace=openat,read -s 200 commande               # filtrer / afficher plus de caractères
 strace -e trace=network curl -s example.org          # seulement le réseau
 strace -e trace=%file ls /nonexistent 2>&1 | tail -3
 ltrace ./programme                                   # appels de bibliothèques
@@ -167,7 +167,7 @@ ltrace ./programme                                   # appels de bibliothèques
 Indices : `ENOENT` (fichier absent), `EACCES` (droits), `EAGAIN`, un `read`/`futex`/`poll` qui dure longtemps (bloqué), `fsync` fréquents (lenteur d'écriture). **Attention** : `strace` ralentit fortement le processus.
 
 ### Outils modernes : `perf`, eBPF
-`perf stat cmd`, `perf record -g`, `bpftrace -e 'tracepoint:syscalls:sys_enter_openat { printf("%s %s\n", comm, str(args->filename)); }'`, suite **BCC/bcc-tools** (`execsnoop`, `opensnoop`, `biolatency`, `tcpconnect`) — faible surcoût, utilisables en production.
+`perf stat commande`, `perf record -g`, `bpftrace -e 'tracepoint:syscalls:sys_enter_openat { printf("%s %s\n", comm, str(args->filename)); }'`, suite **BCC/bcc-tools** (`execsnoop`, `opensnoop`, `biolatency`, `tcpconnect`) — faible surcoût, utilisables en production.
 
 ## 7. Limites et ressources
 
@@ -219,7 +219,7 @@ dmesg | grep -i segfault
 
 | Domaine | Leviers |
 |---------|---------|
-| CPU | gouverneur `performance` (`cpupower frequency-set -g performance`), affinité `taskset -c 0,1 cmd`, `nice`, ajouter des cœurs, optimiser le code |
+| CPU | gouverneur `performance` (`cpupower frequency-set -g performance`), affinité `taskset -c 0,1 commande`, `nice`, ajouter des cœurs, optimiser le code |
 | Mémoire | `vm.swappiness`, hugepages (BD), limiter via cgroups, corriger les fuites |
 | Disque | planificateur (`none`/`mq-deadline` pour SSD), `noatime`, `fstrim`, RAID/NVMe, séparer journaux et données, tuning du FS |
 | Réseau | `net.core.somaxconn`, `net.ipv4.tcp_*` (fenêtres, `tcp_tw_reuse`), offloads NIC (`ethtool -K`), MTU jumbo (si tout le chemin le supporte) |

@@ -36,7 +36,7 @@
 - C) `rm -r dossier`
 - D) `del dossier`
 
-**Q6.** Que fait `cmd > f 2>&1` ?
+**Q6.** Que fait `commande > f 2>&1` ?
 - A) envoie stdout dans `f` et stderr à l'écran
 - B) envoie stdout **et** stderr dans `f`
 - C) envoie stderr dans stdout puis l'écran

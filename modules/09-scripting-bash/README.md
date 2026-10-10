@@ -159,7 +159,7 @@ until ping -c1 -W1 10.0.0.1 >/dev/null; do sleep 2; done     # jusqu'à succès
 break ; continue                              # sortir / passer à l'itération suivante
 ```
 
-Les boucles peuvent être alimentées par un pipe, mais attention : `cmd | while …` s'exécute dans un **sous-shell** (les variables modifiées sont perdues). Préférez `while … done < <(cmd)`.
+Les boucles peuvent être alimentées par un pipe, mais attention : `commande | while …` s'exécute dans un **sous-shell** (les variables modifiées sont perdues). Préférez `while … done < <(commande)`.
 
 ## 6. Tableaux
 
@@ -240,7 +240,7 @@ IFS=$'\n\t'
 | `-o pipefail` | un pipeline échoue si une de ses commandes échoue |
 | `-E` | les `trap ERR` s'appliquent aussi dans les fonctions |
 
-Nuances de `-e` : n'est pas déclenché dans un `if`, `&&`, `||`, `while`. Pour tolérer un échec : `cmd || true`, ou `if cmd; then …`.
+Nuances de `-e` : n'est pas déclenché dans un `if`, `&&`, `||`, `while`. Pour tolérer un échec : `commande || true`, ou `if commande; then …`.
 
 ### Nettoyage avec `trap`, fichiers temporaires
 
@@ -326,7 +326,7 @@ shellcheck script.sh         # ANALYSEUR STATIQUE : à utiliser systématiquemen
 | `for f in $(ls)` | `for f in *` |
 | `cd dossier; rm *` si le `cd` échoue | `cd dossier || exit 1` ou `set -e` |
 | `[ $a = $b ]` avec valeur vide | `[[ $a == "$b" ]]` |
-| Pipe vers `while` perd les variables | `done < <(cmd)` |
+| Pipe vers `while` perd les variables | `done < <(commande)` |
 | `echo` interprète `-n`, `\n` | `printf '%s\n' "$x"` |
 | Script copié depuis Windows (`\r`) | `dos2unix` |
 | Parser la sortie de `ls` | `find -print0`, `stat`, globbing |
