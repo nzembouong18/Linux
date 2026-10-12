@@ -84,6 +84,47 @@ SQL
 
 `<<-` supprime les tabulations initiales (pour indenter dans un script).
 
+### Redirections avancées
+
+**Descripteurs personnalisés et `exec`.** On peut ouvrir ses propres descripteurs (3 à 9) et rediriger **durablement** les flux d'un script entier avec `exec` :
+```bash
+exec 3> journal.log            # ouvre le descripteur 3 en écriture
+echo "début" >&3               # écrit dedans
+echo "autre info" >&3
+exec 3>&-                      # ferme le descripteur
+
+exec > rapport.txt 2>&1        # à partir d'ici, TOUT ce que fait le script va dans rapport.txt
+exec 4< entree.txt             # ouvre en lecture
+read -r ligne <&4              # lit une ligne via le descripteur 4
+```
+Usage typique : un script qui journalise tout dans un fichier tout en gardant un descripteur vers le terminal d'origine (`exec 5>&1`, puis `echo "OK" >&5`).
+
+**Échanger stdout et stderr.** `cmd 3>&1 1>&2 2>&3 3>&-` permute les deux flux (utile pour passer les erreurs dans un pipe et envoyer la sortie normale ailleurs).
+
+**Écrire dans un fichier ET à l'écran.** `tee` copie son entrée vers un fichier et vers stdout ; `-a` ajoute au lieu d'écraser :
+```bash
+make 2>&1 | tee -a build.log              # journal + affichage en direct
+sudo apt update 2>&1 | tee /tmp/maj.log | grep -i err
+```
+
+**Ouvrir en lecture-écriture et créer des fichiers.** `cmd <> fichier` ouvre en lecture/écriture sans tronquer (rare) ; `: > fichier` ou `> fichier` crée/vide un fichier ; `truncate -s 0 fichier` fait de même sur un fichier existant (utile pour un journal ouvert par un service).
+
+**Réseau sans outil.** Bash sait ouvrir des sockets via des pseudo-chemins (`/dev/tcp/hôte/port`) : `exec 3<>/dev/tcp/example.org/80`, `printf 'GET / HTTP/1.0\r\nHost: example.org\r\n\r\n' >&3`, `cat <&3`. Pratique pour tester une connectivité quand `curl` et `nc` sont absents (`timeout 3 bash -c '</dev/tcp/10.0.0.5/443' && echo ouvert`).
+
+**`/dev/stdin`, `/dev/stdout`, `/dev/stderr`, `/dev/fd/N`.** Ces chemins représentent les flux du processus courant ; ils permettent de passer un flux à une commande qui n'accepte qu'un nom de fichier : `diff <(sort a) <(sort b)` fonctionne car le shell remplace `<(…)` par un chemin `/dev/fd/63`.
+
+**Noclobber et sécurité.** `set -o noclobber` empêche `>` d'écraser un fichier existant (forcer avec `>|`). Dans un script critique, il évite de perdre un fichier par une redirection mal placée.
+
+### Tubes nommés (FIFO)
+Un pipe ordinaire est anonyme et éphémère. Un **tube nommé** est une entrée du système de fichiers qui relie deux processus indépendants :
+```bash
+mkfifo /tmp/canal
+cat /tmp/canal &                    # lecteur : bloque en attendant des données
+echo "bonjour" > /tmp/canal         # écrivain : le lecteur affiche « bonjour »
+rm /tmp/canal
+```
+Les ouvertures sont bloquantes tant qu'un lecteur et un écrivain ne sont pas tous deux présents. Cas d'usage : relier des processus lancés séparément, journaliser vers un filtre (`logger`), pilotage d'un programme depuis un script.
+
 ## 3. Les pipes
 
 Le **pipe** `|` relie la stdout d'une commande à la stdin de la suivante. Les commandes s'exécutent **en parallèle**, le noyau gérant un tampon entre elles.
@@ -103,6 +144,21 @@ cat access.log │ awk '{print $1}' │ sort │ uniq -c │ sort -rn │ head
 ```
 
 Code de retour d'un pipeline : celui de la **dernière** commande, sauf `set -o pipefail` (module 09) qui renvoie le premier échec.
+
+### Sous le capot : comment fonctionne un pipe
+- Le shell crée un tampon noyau (**64 Kio** par défaut sous Linux) et connecte la stdout du processus A à son extrémité d'écriture, la stdin de B à son extrémité de lecture. Les deux processus tournent **simultanément** : B commence à travailler avant que A ait terminé.
+- **Contre-pression** : si le tampon est plein, A est **suspendu** jusqu'à ce que B consomme ; si le tampon est vide, B attend. C'est ce qui permet de traiter des fichiers de plusieurs Go sans mémoire excessive (flux).
+- **SIGPIPE** : si B se termine avant A (`yes | head -3`), le noyau envoie SIGPIPE à A, qui s'arrête proprement. Sans cela, `yes` tournerait indéfiniment. Si vous voyez `Broken pipe` : le lecteur est parti avant la fin de l'écriture, souvent sans gravité (`| head`).
+- **Tamponnage (buffering)** : quand stdout n'est **pas** un terminal (pipe, fichier), la plupart des programmes accumulent leur sortie par blocs (4 Kio) au lieu de l'écrire ligne à ligne. Conséquence : `tail -f log | grep x | awk …` n'affiche rien immédiatement. Remèdes : `grep --line-buffered`, `stdbuf -oL cmd`, `unbuffer cmd` (paquet *expect*), `awk '{print; fflush()}'`, `python -u`.
+- **Sous-shells** : chaque élément d'un pipeline est un processus séparé ; les variables modifiées dans `cmd | while read …` sont perdues à la fin de la boucle en bash (le `while` est dans un sous-shell). Solution : `while read …; done < <(cmd)` ou `shopt -s lastpipe` (scripts).
+
+### Codes de retour d'un pipeline
+```bash
+false | true ; echo $?                   # 0 : seul le dernier compte
+set -o pipefail ; false | true ; echo $?  # 1 : le premier échec est conservé
+echo "${PIPESTATUS[@]}"                   # bash : code de chaque étape, ex. « 1 0 »
+```
+Dans un script, `set -euo pipefail` rend les échecs d'un pipeline visibles (module 09). Attention : `grep` renvoie 1 s'il ne trouve rien, ce qui n'est pas forcément une erreur (`grep … || true`).
 
 ## 4. Les filtres essentiels
 

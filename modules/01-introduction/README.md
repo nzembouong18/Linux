@@ -50,6 +50,70 @@ Un « système Linux » complet = **noyau Linux + outils GNU + bibliothèque C +
 
 > **Aujourd'hui** : 100 % du top 500 des supercalculateurs, la grande majorité des serveurs web et des instances cloud, Android (noyau Linux), les routeurs, les téléviseurs… tournent sous Linux.
 
+### Les concepts clés avant de commencer
+
+**Terminal, console, shell : ne pas confondre.**
+| Terme | Rôle |
+|-------|------|
+| **Terminal** (émulateur) | la fenêtre qui affiche le texte et transmet vos frappes |
+| **Shell** (`bash`, `zsh`, `sh`, `fish`) | le programme qui **interprète** vos commandes et lance les autres programmes |
+| **Console** | le terminal « physique » ou virtuel du système (Ctrl+Alt+F1…F6) |
+| **TTY / PTY** | le périphérique noyau qui relie terminal et shell (`tty` affiche le vôtre) |
+Le shell n'est qu'un programme comme les autres : on peut en changer (`chsh -s /bin/zsh`), l'imbriquer (`bash` dans `bash`), l'utiliser sans terminal (scripts, cron).
+
+**Anatomie d'une commande.**
+```text
+commande   -options        arguments
+ls         -l -a -h        /var/log
+ls         -lah            /var/log          # options courtes regroupées
+ls         --all --human-readable /var/log   # options longues
+```
+Le shell découpe la ligne en mots, développe jokers/variables (`*`, `$HOME`), puis lance le programme avec ses arguments. Un code de retour (`echo $?`) indique le résultat : **0 = succès**, autre = erreur.
+
+**Types de commandes.** `type ls` révèle ce qu'est réellement une commande : un *alias*, une *fonction*, une commande **interne** du shell (`cd`, `echo`), un **fichier exécutable** (`/usr/bin/ls`). Le shell cherche les exécutables dans les répertoires listés par la variable **`PATH`** (`echo $PATH`) ; c'est pourquoi un script du répertoire courant se lance avec `./script.sh` et non `script.sh`.
+
+**Variables d'environnement.** Paires nom=valeur transmises aux programmes lancés : `HOME`, `USER`, `PATH`, `LANG`, `EDITOR`, `SHELL`. `env` les liste, `export VAR=valeur` en crée une pour les processus enfants. Elles sont héritées du parent vers l'enfant, jamais l'inverse : modifier une variable dans un script ne change pas le shell appelant.
+
+### « Tout est fichier » : ce que cela veut dire concrètement
+Le noyau présente de nombreuses ressources comme des **entrées de l'arborescence**, ce qui permet d'utiliser les mêmes outils (`cat`, `echo`, redirections) partout.
+| Chemin | Ce qu'il représente | Exemple |
+|--------|--------------------|---------|
+| `/etc/passwd` | fichier ordinaire (texte) | `cat /etc/passwd` |
+| `/dev/sda`, `/dev/nvme0n1` | **périphérique bloc** (disque) | `lsblk` |
+| `/dev/null`, `/dev/zero`, `/dev/urandom` | pseudo-périphériques | `cmd > /dev/null` |
+| `/dev/tty`, `/dev/pts/0` | terminaux | `echo salut > /dev/pts/0` |
+| `/proc/<PID>/…` | **processus** (système de fichiers virtuel du noyau) | `cat /proc/self/status` |
+| `/proc/cpuinfo`, `/proc/meminfo` | informations matérielles | `grep MemAvailable /proc/meminfo` |
+| `/sys/class/net/eth0/…` | **périphériques et pilotes** | `cat /sys/class/net/eth0/mtu` |
+| `/run/…` | état volatil des services (en mémoire) | `ls /run` |
+| socket (`/run/docker.sock`) | communication entre processus | `ss -xl` |
+| tube nommé (FIFO) | canal entre deux processus | `mkfifo f` |
+`ls -l` indique le **type** dans le premier caractère : `-` fichier, `d` répertoire, `l` lien symbolique, `c` périphérique caractère, `b` périphérique bloc, `s` socket, `p` tube nommé. Les répertoires `/proc` et `/sys` n'occupent **aucun** espace disque : ce sont des vues générées à la demande par le noyau.
+
+### Utilisateurs, processus, permissions : le trio de base
+- Tout programme en cours d'exécution est un **processus** (un `PID`), lancé **par un utilisateur** (`UID`) ; il hérite de ses droits.
+- Chaque fichier a un **propriétaire**, un **groupe** et des **permissions** (lecture, écriture, exécution) ; `root` (UID 0) contourne ces contrôles — d'où le principe de ne travailler en `root` que ponctuellement (`sudo`).
+- Les programmes ne parlent pas directement au matériel : ils demandent au noyau, qui vérifie les droits.
+Ces trois notions reviennent dans tout le parcours (modules 06, 07, 14, 16).
+
+### Anatomie du démarrage (vue d'ensemble)
+```text
+Firmware (UEFI/BIOS) → chargeur d'amorçage (GRUB) → noyau + initramfs → systemd (PID 1)
+   → montage des systèmes de fichiers → services (réseau, ssh, …) → ouverture de session
+```
+Le détail est vu au module 21 ; retenez que **systemd** (PID 1) démarre tout le reste et que `journalctl -b` raconte ce démarrage.
+
+### Sept erreurs classiques du débutant
+| Erreur | Pourquoi c'est un problème | Réflexe |
+|--------|---------------------------|---------|
+| Travailler en `root` en permanence | une faute de frappe devient irréversible | utilisateur normal + `sudo` |
+| Copier-coller une commande sans la lire | exécution de code inconnu (`curl … \| sudo bash`) | lire, comprendre, tester |
+| Oublier les guillemets autour d'un nom avec espace | le shell le coupe en deux arguments | `"mon fichier"` |
+| `rm -rf` avec une variable vide (`rm -rf $DIR/`) | peut viser `/` | `"${DIR:?}"`, vérifier avec `echo` d'abord |
+| Ignorer les messages d'erreur | ils indiquent la cause exacte | lire en entier, chercher le message |
+| Éditer un fichier système sans sauvegarde | impossible de revenir en arrière | `cp fichier fichier.bak` |
+| Confondre `.` (répertoire courant) et `..` (parent) | chemins relatifs faux | `pwd` avant d'agir |
+
 ## 2. La philosophie Unix
 
 1. **Un programme = une tâche, bien faite** (`ls` liste, `grep` filtre, `sort` trie).

@@ -45,6 +45,43 @@ last -n 10 ; sudo lastb -n 10                        # connexions / échecs
 dmesg -T --level=err,warn
 ```
 
+### `journalctl` en profondeur
+journald stocke les journaux dans un format **binaire indexé** : les requêtes par service, priorité ou date sont très rapides, et chaque entrée porte des **champs structurés** (`_SYSTEMD_UNIT`, `_PID`, `PRIORITY`, `_HOSTNAME`…).
+```bash
+journalctl -u nginx -u php-fpm --since "2 hours ago" --until "10 minutes ago"   # plusieurs unités, fenêtre de temps
+journalctl -p err..alert                         # plage de priorités (0 emerg … 7 debug)
+journalctl -f -u ssh                             # suivre en direct
+journalctl -n 100 --no-pager                     # 100 dernières lignes, sans pagination
+journalctl -o json-pretty -n 1                   # voir TOUS les champs d'une entrée
+journalctl -o short-iso                          # horodatage ISO 8601 (corrélation facile)
+journalctl _PID=1234                             # filtrer par champ
+journalctl _SYSTEMD_UNIT=cron.service _UID=0
+journalctl /usr/sbin/sshd                        # tous les messages d'un exécutable
+journalctl --list-boots                          # démarrages enregistrés (nécessite la persistance)
+journalctl --disk-usage ; journalctl --verify    # taille / intégrité
+journalctl -g 'timeout|refused'                  # recherche par expression régulière (--grep)
+journalctl -k -b                                 # messages du noyau depuis ce démarrage
+journalctl --since "2024-03-12 14:00" -o cat     # seulement le texte des messages
+```
+**Rendre les journaux persistants** (sinon ils disparaissent au redémarrage, ce qui empêche l'analyse post-mortem) :
+```bash
+sudo mkdir -p /var/log/journal && sudo systemd-tmpfiles --create --prefix /var/log/journal
+# ou dans /etc/systemd/journald.conf : Storage=persistent
+sudo systemctl restart systemd-journald
+```
+**Limiter la taille** (`/etc/systemd/journald.conf`) : `SystemMaxUse=1G`, `SystemKeepFree=2G`, `MaxRetentionSec=1month`, `RateLimitIntervalSec`/`RateLimitBurst` (un service très bavard peut voir ses messages supprimés : « Suppressed N messages »). **Droits** : pour lire tous les journaux sans `sudo`, ajoutez l'utilisateur aux groupes `systemd-journal` ou `adm`.
+
+**Écrire dans le journal depuis un script** : `logger -t mon-script -p user.info "sauvegarde terminée"` (visible par `journalctl -t mon-script`). Un service systemd capture déjà stdout/stderr : un simple `echo` suffit.
+
+**Du journal vers un système central.** `rsyslog` peut relayer vers un serveur (`*.* @@loghost:514`), ou on utilise un agent (Promtail/Alloy, Fluent Bit, Filebeat) qui lit le journal. Centraliser les journaux protège contre l'effacement par un attaquant et permet de corréler plusieurs machines (synchronisez les horloges : `timedatectl`, chrony).
+
+### Que journaliser et comment lire un incident
+1. Fixez l'**heure de début** du problème (utilisateur, supervision) et ouvrez une fenêtre un peu plus large (`--since`/`--until`).
+2. Commencez par la **priorité** (`-p err`) puis élargissez.
+3. Cherchez le **premier** message anormal, pas le dernier : les erreurs en cascade masquent la cause.
+4. Corrélez les sources : application (`-u service`), noyau (`-k`), authentification (`auth.log`), réseau.
+5. Notez les horodatages et les extraits dans le rapport d'incident.
+
 ### rsyslog : facilités et priorités
 
 Un message syslog a une **facility** (`auth`, `authpriv`, `cron`, `daemon`, `kern`, `mail`, `user`, `local0`…`local7`) et une **severity** (0 `emerg`, 1 `alert`, 2 `crit`, 3 `err`, 4 `warning`, 5 `notice`, 6 `info`, 7 `debug`).
